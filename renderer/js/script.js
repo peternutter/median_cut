@@ -25,7 +25,7 @@ function loadImage(e) {
 
   form.style.display = "block";
   document.querySelector("#filename").innerHTML = file.name;
-  outputPath.innerText = path.join(os.homedir(), "\\electron-images");
+  outputPath.innerText = path.join(os.homedir(), "electron-images");
   // outputPath.innerText = outputPath.innerText.replace(/\\/g, "/");
 }
 
