@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es6",
+//    "lib": ["esnext", "dom"],
+    "outDir": "./dest/",
+//    "sourceMap": true,
+//    "moduleResolution": "node",
+//    "esModuleInterop": true,
+//    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["./*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
