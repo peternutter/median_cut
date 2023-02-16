@@ -27,10 +27,13 @@ export class MCut {
 
     private getLongestBoxIndex() {
         let longestBoxIndex = 0;
+        let longestSide= this.boxes[0].get_longest_axis_size();
+        //Two approaches are possible. Either find the longest box by side or by volume.
 
         for (let i = this.boxes.length - 1; i >= 0; i--) {
-            if (this.boxes[i].get_bounding_box() > this.boxes[longestBoxIndex].get_bounding_box()) {
+            if (this.boxes[i].get_longest_axis_size() > longestSide) {
                 longestBoxIndex = i;
+                longestSide = this.boxes[i].get_longest_axis_size();
             }
         }
         return longestBoxIndex;
@@ -44,7 +47,6 @@ export class MCut {
         if(this.boxes.length === 0) {
             return [];
         }
-        let longestBoxIndex = 0;
         let splitBoxes;
         let values = [];
 

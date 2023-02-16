@@ -183,4 +183,16 @@ export class Box {
             return this.box;
         }
 
+        public get_volume() {
+            // Returns the volume of the box
+            return (this.box[0].max - this.box[0].min)
+                * (this.box[1].max - this.box[1].min)
+                * (this.box[2].max - this.box[2].min);
+        }
+
+        public get_longest_axis_size (){
+            let longest_axis = this.get_longest_axis();
+            return this.box[longest_axis.axis].max - this.box[longest_axis.axis].min;
+        }
+
 }
