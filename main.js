@@ -97,7 +97,7 @@ function createAboutWindow() {
 
 //respond to ipcRenderer reize image
 ipcMain.on("image:resize", (e, options) => {
-    options.dest = path.join(os.homedir(), "\\electron-images");
+    options.dest = path.join(os.homedir(), "electron-images");
     console.log(options);
     loadAndSave(options);
     // resizeImage(options);
