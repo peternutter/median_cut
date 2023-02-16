@@ -59,7 +59,7 @@ function resizeImage(e) {
 
 //Catch image:done event
 ipcRenderer.on("image:done", () => {
-  alertSuccess("Image resized successfully");
+  alertSuccess("Image quantized successfully");
 });
 
 function isFileImage(file) {

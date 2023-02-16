@@ -25,7 +25,7 @@ function createMainWindow() {
     });
     //open devtools if in dev env
     if (isDev) {
-        mainWindow.webContents.openDevTools();
+        // mainWindow.webContents.openDevTools();
     }
     mainWindow.loadFile(path.join(__dirname, "/renderer/index.html"));
 }
@@ -162,7 +162,8 @@ async function loadAndSave({imgPath, height, width, numColor, dest}) {
         quantize(rgbMatrix, palette);
 
         //save the image
-        saveRGBMatrixAsImage(rgbMatrix, dest);
+        const filename = path.basename(imgPath);
+        saveRGBMatrixAsImage(rgbMatrix, dest, filename);
         mainWindow.webContents.send("image:done");
         await shell.openPath(dest);
 
@@ -200,7 +201,7 @@ async function loadAndSave({imgPath, height, width, numColor, dest}) {
 
 }
 
-function saveRGBMatrixAsImage(matrix, dest) {
+function saveRGBMatrixAsImage(matrix, dest, filename) {
     const width = matrix[0].length;
     const height = matrix.length;
 
@@ -221,10 +222,16 @@ function saveRGBMatrixAsImage(matrix, dest) {
     // create a stream for the PNG image data
     const stream = png.pack();
 
+    if (!fs.existsSync(dest)) {
+        fs.mkdirSync(dest);
+    }
+    //Remove the extension
+    const name = filename.split(".")[0];
+
     // pipe the stream to a file
-    stream.pipe(fs.createWriteStream(path.join(dest, 'image_quantized.png'))
+    stream.pipe(fs.createWriteStream(path.join(dest, name+ '.png'))
         .on('finish', () => {
-            console.log('Image saved to '+ dest);
+            console.log('Image saved to ' + dest);
         })
         .on('error', err => {
             console.error(err);
