@@ -5,8 +5,6 @@ const fs = require("fs");
 const isMac = process.platform === "darwin";
 const isDev = process.env.NODE_ENV !== "development";
 const resizeImg = require("resize-img");
-const medianCut = require("./medium-cut");
-const PNGReader = require("png.js");
 const PNG = require('pngjs').PNG;
 const imageToRgbaMatrix = require('image-to-rgba-matrix');
 const {MCut} = require("./dest/MCut");
@@ -29,7 +27,6 @@ function createMainWindow() {
     if (isDev) {
         mainWindow.webContents.openDevTools();
     }
-    console.log(path.join(__dirname, "../renderer/index.html"));
     mainWindow.loadFile(path.join(__dirname, "/renderer/index.html"));
 }
 
@@ -100,28 +97,22 @@ function createAboutWindow() {
 
 //respond to ipcRenderer reize image
 ipcMain.on("image:resize", (e, options) => {
-    console.log(options);
-    options.dest = path.join(os.homedir(), "IdeaProjects//electron");
+    options.dest = path.join(os.homedir(), "\\electron-images");
     console.log(options);
     loadAndSave(options);
-    resizeImage(options);
+    // resizeImage(options);
 });
 
 //resize image
 async function resizeImage({imgPath, height, width, dest}) {
     try {
-        // console.log(imgPath, height, width, dest);
-
         // Resize image
         const newImage = await resizeImg(fs.readFileSync(imgPath), {
             width: +width,
             height: +height,
         });
         ///
-
         const filename = path.basename(imgPath);
-
-        console.log(2);
         //create dest folder
         if (!fs.existsSync(dest)) {
             console.log(dest);
@@ -133,7 +124,7 @@ async function resizeImage({imgPath, height, width, dest}) {
         fs.writeFileSync(path.join(dest, filename), newImage);
 
         //Open dest folder
-        // await shell.openPath(dest);
+        await shell.openPath(dest);
 
         //Send success message
         mainWindow.webContents.send("image:done");
@@ -145,13 +136,14 @@ async function resizeImage({imgPath, height, width, dest}) {
 
 }
 
-async function loadAndSave({imgPath, height, width, dest}) {
+async function loadAndSave({imgPath, height, width, numColor, dest}) {
     try {
-        let rgbaMatrix = await imageToRgbaMatrix(imgPath);
 
+        //Load the image from the path
+        let rgbaMatrix = await imageToRgbaMatrix(imgPath);
         let rgbMatrix = [];
         let data = [];
-        // rgba matrix to rgb matrix
+        // rgba matrix to rgb matrix and to data array
         for (let i = 0; i < rgbaMatrix.length; i++) {
             rgbMatrix[i] = [];
             for (let j = 0; j < rgbaMatrix[0].length; j++) {
@@ -159,28 +151,20 @@ async function loadAndSave({imgPath, height, width, dest}) {
                 data.push([rgbaMatrix[i][j][0], rgbaMatrix[i][j][1], rgbaMatrix[i][j][2]]);
             }
         }
-        // console.log(rgbMatrix);
-        let mc = new medianCut()
-
-        let mc2= new MCut(data);
-        let palette2 = mc2.getFixedSizePalette(2);
-        console.log(palette2, palette2);
-
-        mc.init(data);
-        // let palette = mc.get_dynamic_size_palette(0.4);
-        let palette = mc.get_fixed_size_palette(2);
+        //initialize the median cut algorithm
+        let medianCut = new MCut(data);
+        let palette = medianCut.getFixedSizePalette(numColor);
+        console.log("palette");
         console.log(palette);
+        console.log(palette.length)
+
+        //quantize the image
         quantize(rgbMatrix, palette);
-        let png = new PNG({
-            width: width,
-            height: height,
-            colorType: 2,
-            inputColorType: 2,
-            filterType: 4,
-        });
 
-       saveRGBMatrixAsImage(rgbMatrix);
-
+        //save the image
+        saveRGBMatrixAsImage(rgbMatrix, dest);
+        mainWindow.webContents.send("image:done");
+        await shell.openPath(dest);
 
 
     } catch (error) {
@@ -216,33 +200,33 @@ async function loadAndSave({imgPath, height, width, dest}) {
 
 }
 
-function saveRGBMatrixAsImage(matrix) {
- const width = matrix[0].length;
-  const height = matrix.length;
+function saveRGBMatrixAsImage(matrix, dest) {
+    const width = matrix[0].length;
+    const height = matrix.length;
 
-  // create a new PNG image with the same dimensions as the matrix
-  const png = new PNG({ width, height });
+    // create a new PNG image with the same dimensions as the matrix
+    const png = new PNG({width, height});
 
-  // write the pixel data to the PNG image
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const pixelIndex = (y * width + x) * 4;
-      png.data[pixelIndex] = matrix[y][x][0]; // red
-      png.data[pixelIndex + 1] = matrix[y][x][1]; // green
-      png.data[pixelIndex + 2] = matrix[y][x][2]; // blue
-      png.data[pixelIndex + 3] = 255; // alpha
+    // write the pixel data to the PNG image
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const pixelIndex = (y * width + x) * 4;
+            png.data[pixelIndex] = matrix[y][x][0]; // red
+            png.data[pixelIndex + 1] = matrix[y][x][1]; // green
+            png.data[pixelIndex + 2] = matrix[y][x][2]; // blue
+            png.data[pixelIndex + 3] = 255; // alpha
+        }
     }
-  }
 
-  // create a stream for the PNG image data
-  const stream = png.pack();
+    // create a stream for the PNG image data
+    const stream = png.pack();
 
-  // pipe the stream to a file
-  stream.pipe(fs.createWriteStream('image.png'))
-    .on('finish', () => {
-      console.log('Image saved to image.png');
-    })
-    .on('error', err => {
-      console.error(err);
-    });
+    // pipe the stream to a file
+    stream.pipe(fs.createWriteStream(path.join(dest, 'image_quantized.png'))
+        .on('finish', () => {
+            console.log('Image saved to '+ dest);
+        })
+        .on('error', err => {
+            console.error(err);
+        }));
 }

@@ -3,15 +3,15 @@
 const widthInput = document.querySelector("#width");
 const heightInput = document.querySelector("#height");
 const outputPath = document.querySelector("#output-path");
-const filename = document.querySelector("#filename");
 const img = document.querySelector("#img");
 const form = document.querySelector("#img-form");
+const numberOfColors = document.querySelector("#numCol");
 
 function loadImage(e) {
   const file = e.target.files[0];
 
   if (!isFileImage(file)) {
-    allertError("Please select an image file");
+    alertError("Please select an image file");
     return;
   }
 
@@ -25,9 +25,7 @@ function loadImage(e) {
 
   form.style.display = "block";
   document.querySelector("#filename").innerHTML = file.name;
-  outputPath.innerText = path.join(os.homedir(), "IdeaProjects\\electron");
-  console.log(os.homedir());
-  // console.log("test");
+  outputPath.innerText = path.join(os.homedir(), "\\electron-images");
   // outputPath.innerText = outputPath.innerText.replace(/\\/g, "/");
 }
 
@@ -49,17 +47,19 @@ function resizeImage(e) {
   const imgPath = img.files[0].path;
   const width = widthInput.value;
   const height = heightInput.value;
+  const numColor = numberOfColors.value;
 
   ipcRenderer.send("image:resize", {
     imgPath,
     height,
     width,
+    numColor,
   });
 }
 
 //Catch image:done event
 ipcRenderer.on("image:done", () => {
-  allertSucess("Image resized successfully");
+  alertSuccess("Image resized successfully");
 });
 
 function isFileImage(file) {
@@ -70,7 +70,7 @@ function isFileImage(file) {
 document.querySelector("#img").addEventListener("change", loadImage);
 form.addEventListener("submit", resizeImage);
 
-function allertError(message) {
+function alertError(message) {
   Toastify.toast({
     text: message,
     duration: 5000,
@@ -83,7 +83,7 @@ function allertError(message) {
   });
 }
 
-function allertSucess(message) {
+function alertSuccess(message) {
   Toastify.toast({
     text: message,
     duration: 5000,
