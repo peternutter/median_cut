@@ -83,6 +83,7 @@ document.querySelector('#return').addEventListener('click', () => {
     document.querySelector('#image-selection').style.display = 'block';
     document.querySelector('#show-img').style.display = 'none';
 });
+document.querySelector("#output-path").innerText = path.join(os.homedir(), "electron-images");
 
 function alertError(message) {
     Toastify.toast({
