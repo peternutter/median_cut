@@ -585,6 +585,11 @@ video {
   margin-top: 1rem;
 }
 
+.ms-4 {
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
 .block {
   display: block;
 }
@@ -799,4 +804,7 @@ video {
 
 .focus\:ring-offset-2:focus {
   --tw-ring-offset-width: 2px;
+}
+img {
+  max-width: 100%;
 }
