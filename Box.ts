@@ -2,24 +2,17 @@ type BoxData = [number, number, number][];
 type MinMax = { min: number, max: number };
 
 export class Box {
-    private data: BoxData; // it's all about the data
-    private box: MinMax[]; // the bounding box of the data
-    private dim = 3; // number of dimensions in the data, currently fixed to 3 to handle RGB
+    private readonly data: BoxData;
+    private readonly box: MinMax[];
+    private dim = 3;
 
     constructor(data: BoxData) {
         this.data = data;
         this.box = this.calculate_bounding_box();
     }
 
-    private is_nan() {
-        return isNaN(this.data[0][0]) || isNaN(this.data[0][1]) || isNaN(this.data[0][2]);
-    }
-
     private calculate_bounding_box() {
 
-        // keeps running tally of the min and max values on each dimension
-        // initialize the min value to the highest number possible, and the
-        // max value to the lowest number possible
 
         let minmax = [{min: Number.MAX_VALUE, max: Number.MIN_VALUE},
             {min: Number.MAX_VALUE, max: Number.MIN_VALUE},
@@ -45,13 +38,10 @@ export class Box {
 
     }
 
-    public get_data() {
-        return this.data;
-    }
 
     private get_longest_axis() {
 
-        // Returns the longest (aka 'widest') axis of the data in this box.
+        // Returns the longest axis of the data in this box.
 
         let longest_axis = 0;
         let longest_axis_size = 0;
@@ -70,12 +60,7 @@ export class Box {
 
     private get_comparison_func(_i: number) {
 
-        // Return a comparison function based on a given index (for median-cut,
-        // sort on the longest axis) ie: sort ONLY on a single axis.
-        // get_comparison_func( 1 ) would return a sorting function that sorts
-        // the data according to each item's Green value.
-
-        return  function (a: number[], b: number[]) {
+        return function (a: number[], b: number[]) {
             return a[_i] - b[_i];
         };
     }
@@ -113,86 +98,60 @@ export class Box {
         return mean_i;
     }
 
-     public split() {
+    public split() {
 
-            // Splits this box in two and returns two box objects. This function
-            // represents steps 2 and 3 of the algorithm, as written at the top
-            // of this file.
+        this.sort();
 
-            this.sort();
+        let med = this.mean_pos();
+        let data1 = Array.prototype.slice.call(this.data, 0, med);
+        let data2 = Array.prototype.slice.call(this.data, med);
+        let box1 = new Box(data1);
+        let box2 = new Box(data2);
 
-            let med   = this.mean_pos();
-            let data1 = Array.prototype.slice.call( this.data, 0, med ); // elements 0 through med
-            let data2 = Array.prototype.slice.call( this.data, med );    // elements med through end
-            let box1  = new Box(data1);
-            let box2  = new Box(data2);
+        return [box1, box2];
 
-            return [ box1, box2 ];
+    }
 
+    public average() {
+
+        // Returns the average value of the data in this box
+
+        let avg_r = 0;
+        let avg_g = 0;
+        let avg_b = 0;
+        let i;
+
+        for (i = this.data.length - 1; i >= 0; i -= 1) {
+            avg_r += this.data[i][0];
+            avg_g += this.data[i][1];
+            avg_b += this.data[i][2];
         }
 
-          public average() {
+        avg_r /= this.data.length;
+        avg_g /= this.data.length;
+        avg_b /= this.data.length;
 
-            // Returns the average value of the data in this box
+        return [avg_r, avg_g, avg_b];
 
-            let avg_r = 0;
-            let avg_g = 0;
-            let avg_b = 0;
-            let i;
+    }
 
-            for( i = this.data.length - 1; i >= 0; i -= 1 ) {
-                avg_r += this.data[i][0];
-                avg_g += this.data[i][1];
-                avg_b += this.data[i][2];
-            }
+    public is_splittable() {
 
-            avg_r /= this.data.length;
-            avg_g /= this.data.length;
-            avg_b /= this.data.length;
+        // A box is considered splittable if it has two or more items.
 
-            return [ avg_r, avg_g, avg_b];
+        return this.data.length >= 2;
+    }
 
-        }
+    public get_volume() {
+        // Returns the volume of the box
+        return (this.box[0].max - this.box[0].min)
+            * (this.box[1].max - this.box[1].min)
+            * (this.box[2].max - this.box[2].min);
+    }
 
-         private median_pos() {
-
-            // Returns the position of the median value of the data in
-            // this box.  The position number is rounded down, to deal
-            // with cases when the data has an odd number of elements.
-
-            return Math.floor( this.data.length / 2 );
-
-        }
-
-         public is_empty() {
-
-            // Self-explanatory
-
-            return this.data.length === 0;
-        }
-
-         public is_splittable() {
-
-            // A box is considered splittable if it has two or more items.
-
-            return this.data.length >= 2;
-        }
-
-         public get_bounding_box() {
-            // Getter for the bounding box
-            return this.box;
-        }
-
-        public get_volume() {
-            // Returns the volume of the box
-            return (this.box[0].max - this.box[0].min)
-                * (this.box[1].max - this.box[1].min)
-                * (this.box[2].max - this.box[2].min);
-        }
-
-        public get_longest_axis_size (){
-            let longest_axis = this.get_longest_axis();
-            return this.box[longest_axis.axis].max - this.box[longest_axis.axis].min;
-        }
+    public get_longest_axis_size() {
+        let longest_axis = this.get_longest_axis();
+        return this.box[longest_axis.axis].max - this.box[longest_axis.axis].min;
+    }
 
 }
