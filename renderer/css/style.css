@@ -585,8 +585,9 @@ video {
   margin-top: 1rem;
 }
 
-.mb-4 {
-  margin-bottom: 1rem;
+.ms-4 {
+  margin-left: 1rem;
+  margin-right: 1rem;
 }
 
 .block {
