@@ -25,7 +25,7 @@ function createMainWindow() {
     });
     //open devtools if in dev env
     if (isDev) {
-        // mainWindow.webContents.openDevTools();
+        mainWindow.webContents.openDevTools();
     }
     mainWindow.loadFile(path.join(__dirname, "/renderer/index.html"));
 }
@@ -97,7 +97,6 @@ function createAboutWindow() {
 
 //respond to ipcRenderer reize image
 ipcMain.on("image:resize", (e, options) => {
-    options.dest = path.join(os.homedir(), "electron-images");
     console.log(options);
     loadAndSave(options);
     // resizeImage(options);
@@ -136,7 +135,7 @@ async function resizeImage({imgPath, height, width, dest}) {
 
 }
 
-async function loadAndSave({imgPath, height, width, numColor, dest}) {
+async function loadAndSave({imgPath, numColor, dest, newName}){
     try {
 
         //Load the image from the path
@@ -162,7 +161,7 @@ async function loadAndSave({imgPath, height, width, numColor, dest}) {
         quantize(rgbMatrix, palette);
 
         //save the image
-        const filename = path.basename(imgPath);
+        const filename = newName;
         saveRGBMatrixAsImage(rgbMatrix, dest, filename);
         mainWindow.webContents.send("image:done");
         await shell.openPath(dest);

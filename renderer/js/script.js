@@ -1,97 +1,103 @@
 // Some JavaScript to load the image and show the form. There is no actual backend functionality. This is just the UI
 
-const widthInput = document.querySelector("#width");
-const heightInput = document.querySelector("#height");
 const outputPath = document.querySelector("#output-path");
 const img = document.querySelector("#img");
 const form = document.querySelector("#img-form");
 const numberOfColors = document.querySelector("#numCol");
+const newName = document.querySelector("#new-name");
 
 function loadImage(e) {
-  const file = e.target.files[0];
+    const file = e.target.files[0];
 
-  if (!isFileImage(file)) {
-    alertError("Please select an image file");
-    return;
-  }
+    if (!isFileImage(file)) {
+        alertError("Please select an image file");
+        return;
+    }
 
-  //Get original dimensions
-  const img = new Image();
-  img.src = URL.createObjectURL(file);
-  img.onload = function () {
-    widthInput.value = this.width;
-    heightInput.value = this.height;
-  };
+    //Get original dimensions
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
 
-  form.style.display = "block";
-  document.querySelector("#filename").innerHTML = file.name;
-  outputPath.innerText = path.join(os.homedir(), "electron-images");
-  // outputPath.innerText = outputPath.innerText.replace(/\\/g, "/");
+    form.style.display = "block";
+    document.querySelector("#filename").innerHTML = file.name;
+}
+
+//Change the output path
+function changePath(e) {
+    //get the path from the event
+    let destPath = e.target.files[0].path;
+    //get just the directory
+    destPath = path.dirname(destPath);
+    outputPath.innerText = destPath;
+
 }
 
 // Resize image
 function resizeImage(e) {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!img.files[0]) {
-    alertError("Please upload an image");
-    return;
-  }
+    if (!img.files[0]) {
+        alertError("Please upload an image");
+        return;
+    }
 
-  if (widthInput.value === "" || heightInput.value === "") {
-    alertError("Please enter a width and height");
-    return;
-  }
+    // Electron adds a bunch of extra properties to the file object including the path
+    let imgPath = img.files[0].path;
+    const numColor = numberOfColors.value;
+    const dest = outputPath.innerText === "" ? path.join(os.homedir(), "electron-images") : path.join(outputPath.innerText);
 
-  // Electron adds a bunch of extra properties to the file object including the path
-  const imgPath = img.files[0].path;
-  const width = widthInput.value;
-  const height = heightInput.value;
-  const numColor = numberOfColors.value;
+    //check if the image is not going to be overwritten
+    if(imgPath===path.join(dest, newName.value+'.png')){
+        alertError("The output directory cannot be the same as source directory");
+        return;
+    }
 
-  ipcRenderer.send("image:resize", {
-    imgPath,
-    height,
-    width,
-    numColor,
-  });
+    ipcRenderer.send("image:resize", {
+        imgPath,
+        numColor,
+        dest,
+        newName: newName.value+'.png',
+    });
 }
 
 //Catch image:done event
 ipcRenderer.on("image:done", () => {
-  alertSuccess("Image quantized successfully");
+    alertSuccess("Image quantized successfully");
 });
 
 function isFileImage(file) {
-  const acceptedImageTypes = ["image/gif", "image/jpeg", "image/png"];
-  return file && acceptedImageTypes.includes(file["type"]);
+    const acceptedImageTypes = ["image/gif", "image/jpeg", "image/png"];
+    return file && acceptedImageTypes.includes(file["type"]);
 }
 
 document.querySelector("#img").addEventListener("change", loadImage);
+
+
+document.querySelector('#path').addEventListener('change', changePath);
 form.addEventListener("submit", resizeImage);
 
 function alertError(message) {
-  Toastify.toast({
-    text: message,
-    duration: 5000,
-    close: false,
-    style: {
-      background: "red",
-      color: "white",
-      textAlign: "center",
-    },
-  });
+    Toastify.toast({
+        text: message,
+        duration: 5000,
+        close: false,
+        style: {
+            background: "red",
+            color: "white",
+            textAlign: "center",
+        },
+    });
 }
 
 function alertSuccess(message) {
-  Toastify.toast({
-    text: message,
-    duration: 5000,
-    close: false,
-    style: {
-      background: "green",
-      color: "white",
-      textAlign: "center",
-    },
-  });
+    Toastify.toast({
+        text: message,
+        duration: 5000,
+        close: false,
+        style: {
+            background: "green",
+            color: "white",
+            textAlign: "center",
+        },
+    });
 }
