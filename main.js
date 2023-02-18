@@ -135,7 +135,7 @@ async function resizeImage({imgPath, height, width, dest}) {
 
 }
 
-async function loadAndSave({imgPath, numColor, dest, newName}){
+async function loadAndSave({imgPath, numColor, dest, newName}) {
     try {
 
         //Load the image from the path
@@ -161,10 +161,12 @@ async function loadAndSave({imgPath, numColor, dest, newName}){
         quantize(rgbMatrix, palette);
 
         //save the image
-        const filename = newName;
-        saveRGBMatrixAsImage(rgbMatrix, dest, filename);
-        mainWindow.webContents.send("image:done");
-        await shell.openPath(dest);
+        saveRGBMatrixAsImage(rgbMatrix, dest, newName);
+        setTimeout(() => {
+            mainWindow.webContents.send("image:done", imgPath, numColor, dest, newName);
+        }, 2000);
+
+        // await shell.openPath(dest);
 
 
     } catch (error) {
@@ -225,10 +227,9 @@ function saveRGBMatrixAsImage(matrix, dest, filename) {
         fs.mkdirSync(dest);
     }
     //Remove the extension
-    const name = filename.split(".")[0];
 
     // pipe the stream to a file
-    stream.pipe(fs.createWriteStream(path.join(dest, name+ '.png'))
+    stream.pipe(fs.createWriteStream(path.join(dest, filename))
         .on('finish', () => {
             console.log('Image saved to ' + dest);
         })

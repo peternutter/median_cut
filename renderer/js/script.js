@@ -61,8 +61,12 @@ function resizeImage(e) {
 }
 
 //Catch image:done event
-ipcRenderer.on("image:done", () => {
+ipcRenderer.on("image:done", (imgPath, numColor, dest, newName) => {
     alertSuccess("Image quantized successfully");
+    document.querySelector('#image-selection').style.display = 'none';
+    document.querySelector('#show-img').style.display = 'block';
+    document.querySelector('#img-original').src = imgPath;
+    document.querySelector('#img-quant').src = path.join(dest, newName);
 });
 
 function isFileImage(file) {
@@ -75,6 +79,10 @@ document.querySelector("#img").addEventListener("change", loadImage);
 
 document.querySelector('#path').addEventListener('change', changePath);
 form.addEventListener("submit", resizeImage);
+document.querySelector('#return').addEventListener('click', () => {
+    document.querySelector('#image-selection').style.display = 'block';
+    document.querySelector('#show-img').style.display = 'none';
+});
 
 function alertError(message) {
     Toastify.toast({
