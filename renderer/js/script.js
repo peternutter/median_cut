@@ -80,7 +80,7 @@ document.querySelector("#img").addEventListener("change", loadImage);
 document.querySelector('#path').addEventListener('change', changePath);
 form.addEventListener("submit", resizeImage);
 document.querySelector('#return').addEventListener('click', () => {
-    document.querySelector('#image-selection').style.display = 'block';
+    document.querySelector('#image-selection').style.display = '';
     document.querySelector('#show-img').style.display = 'none';
 });
 document.querySelector("#output-path").innerText = path.join(os.homedir(), "electron-images");
